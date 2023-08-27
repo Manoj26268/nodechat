@@ -1,5 +1,6 @@
 const  Chatbot  = require('../models/Chatbot');
 const User  = require('../models/User');
+const Conversation = require('../models/Conversation');
 
 const ChatbotController = {
 
@@ -64,7 +65,7 @@ const ChatbotController = {
       const conversation = await Conversation.create({ ChatbotId: chatbotId });
       res.status(201).json(conversation);
     } catch (error) {
-      res.status(500).json({ error: 'An error occurred while starting the conversation.' });
+      res.status(500).json({ error });
     }
   },
 
@@ -80,7 +81,7 @@ const ChatbotController = {
       const conversations = await Conversation.findAll({ where: { ChatbotId: chatbotId } });
       res.status(200).json(conversations);
     } catch (error) {
-      res.status(500).json({ error: 'An error occurred while fetching conversations.' });
+      res.status(500).json({ error });
     }
   }
 };

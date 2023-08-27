@@ -10,6 +10,17 @@ class Conversation extends Model {}
 Conversation.init(
   {
     // ... fields for Conversation
+    ChatbotId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'Chatbot', 
+        key: 'id',
+      },
+    },
+    EndUserId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
   },
   {
     sequelize,

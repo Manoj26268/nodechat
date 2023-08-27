@@ -19,13 +19,22 @@ Chatbot.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    // UserId: {
+    //   type: DataTypes.INTEGER,
+    //   allowNull: false,
+    //   references: {
+    //     model: User, // This is the User model
+    //     key: 'id',   // This is the primary key of the Users table
+    //   },
+    // },
     // ... other fields for Chatbot
   },
+
   {
     sequelize,
     modelName: 'Chatbot',
   }
 );
 
-
+// Chatbot.belongsTo(User, { foreignKey: 'UserId' });
 module.exports = Chatbot;
