@@ -8,5 +8,6 @@ router.get('/', EndUserController.listEndUsers);
 router.get('/:endUserId', EndUserController.getEndUser);
 router.put('/:endUserId', EndUserController.updateEndUser);
 router.delete('/:endUserId', EndUserController.deleteEndUser);
+router.get('/:name', EndUserController.getEndUsersByName);
 
 module.exports = router;

@@ -14,7 +14,13 @@ const UserController = {
 
   listUsers: async (req, res) => {
     try {
-      const users = await User.findAll();
+      const { page = 1, perPage = 10 } = req.query;
+
+      const users = await User.findAndCountAll({
+        limit: perPage,
+        offset: (page - 1) * perPage,
+      });
+
       res.status(200).json(users);
     } catch (error) {
       res.status(500).json({ error: 'An error occurred while fetching users.' });
@@ -86,21 +92,18 @@ const UserController = {
 
   listChatbotsForUser: async (req, res) => {
     try {
-      const { userId } = req.params;
+      const { page = 1, perPage = 10 } = req.query;
 
-      const user = await User.findByPk(userId, {
-        include: [{ model: Chatbot, as: 'Chatbots' }]
+      const chatbots = await Chatbot.findAndCountAll({
+        limit: perPage,
+        offset: (page - 1) * perPage,
       });
 
-      if (!user) {
-        return res.status(404).json({ error: 'User not found.' });
-      }
-
-      res.status(200).json(user.Chatbots);
+      res.status(200).json(chatbots);
     } catch (error) {
       res.status(500).json({ error: 'An error occurred while fetching chatbots.' });
     }
-  }
+  },
 };
 
 module.exports = UserController;

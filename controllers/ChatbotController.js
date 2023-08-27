@@ -1,6 +1,7 @@
 const  Chatbot  = require('../models/Chatbot');
 const User  = require('../models/User');
 const Conversation = require('../models/Conversation');
+const { Op } = require('sequelize');
 
 const ChatbotController = {
 
@@ -56,13 +57,19 @@ const ChatbotController = {
   startConversation: async (req, res) => {
     try {
       const { chatbotId } = req.params;
-
+      const { text } = req.body;
+      const { endUserId }= req.body;
       const chatbot = await Chatbot.findByPk(chatbotId);
       if (!chatbot) {
         return res.status(404).json({ error: 'Chatbot not found.' });
       }
 
-      const conversation = await Conversation.create({ ChatbotId: chatbotId });
+      const conversation = await Conversation.create({
+        ChatbotId: chatbotId,
+        EndUserId: endUserId,
+        text: text, // Store the text in the conversation
+      });
+
       res.status(201).json(conversation);
     } catch (error) {
       res.status(500).json({ error });
@@ -71,17 +78,30 @@ const ChatbotController = {
 
   listConversationsForChatbot: async (req, res) => {
     try {
-      const { chatbotId } = req.params;
+      const { page = 1, perPage = 10 } = req.query;
 
-      const chatbot = await Chatbot.findByPk(chatbotId);
-      if (!chatbot) {
-        return res.status(404).json({ error: 'Chatbot not found.' });
-      }
+      const conversations = await Conversation.findAndCountAll({
+        limit: perPage,
+        offset: (page - 1) * perPage,
+      });
 
-      const conversations = await Conversation.findAll({ where: { ChatbotId: chatbotId } });
       res.status(200).json(conversations);
     } catch (error) {
-      res.status(500).json({ error });
+      res.status(500).json({ error: 'An error occurred while fetching conversations.' });
+    }
+  },
+  getChatbotsByName: async (req, res) => {
+    try {
+      const { name } = req.params;
+      const chatbots = await Chatbot.findAll({
+        where: {
+          name: { [Op.like]: `%${name}%` } // Search by partial name match
+        },
+        limit: 10 // Limit the results per page
+      });
+      res.status(200).json(chatbots);
+    } catch (error) {
+      res.status(500).json({ error: 'An error occurred while fetching chatbots.' });
     }
   }
 };

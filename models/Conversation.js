@@ -10,16 +10,13 @@ class Conversation extends Model {}
 Conversation.init(
   {
     // ... fields for Conversation
-    ChatbotId: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: 'Chatbot', 
-        key: 'id',
-      },
+    text: {
+      type: DataTypes.TEXT,
+      allowNull: true, // Allow storing text in the conversation
     },
-    EndUserId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
+    completed: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
   },
   {

@@ -1,20 +1,58 @@
 const EndUser  = require('../models/EndUser');
+const bcrypt = require('bcrypt');
+const passport = require('passport');
+const { Op } = require('sequelize');
 
 const EndUserController = {
   registerEndUser: async (req, res) => {
     try {
-      const { name, email } = req.body;
+      const { name, email, password } = req.body;
+      const tempname = name;
+      // Check if an end user with the given name already exists
+      const existingEndUser = await EndUser.findOne({ where: { name: tempname } });
+      if (existingEndUser) {
+        passport.authenticate('local', (err, user, info) => {
+            if (err) {
+              return res.status(500).json({ error: 'An error occurred while authenticating.' });
+            }
+            if (!user) {
+              return res.status(401).json({ error: 'Invalid credentials.' });
+            }
+            req.login(user, (err) => {
+              if (err) {
+                return res.status(500).json({ error: 'An error occurred while logging in.' });
+              }
+              return res.status(200).json({ message: 'Logged in successfully.' });
+            });
+          });
+      }
 
-      const endUser = await EndUser.create({ name, email });
-      res.status(201).json(endUser);
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const newEndUser = await EndUser.create({
+        name,
+        email,
+        password: hashedPassword
+      });
+
+      res.status(201).json(newEndUser);
     } catch (error) {
-      res.status(500).json({ error: 'An error occurred while registering the end user.' });
+      res.status(500).json({ error });
     }
+  
   },
+  
 
   listEndUsers: async (req, res) => {
     try {
-      const endUsers = await EndUser.findAll();
+      const { page = 1, perPage = 10 } = req.query;
+
+      const endUsers = await EndUser.findAndCountAll({
+        limit: perPage,
+        offset: (page - 1) * perPage,
+      });
+
       res.status(200).json(endUsers);
     } catch (error) {
       res.status(500).json({ error: 'An error occurred while fetching end users.' });
@@ -36,20 +74,21 @@ const EndUserController = {
     }
   },
 
-  updateEndUser: async (req, res) => {
+  updateEndUser:  async (req, res) => {
     try {
       const { endUserId } = req.params;
-      const { name, email } = req.body;
+      const { name, email, password } = req.body;
 
+      // Check if the end user exists
       const endUser = await EndUser.findByPk(endUserId);
       if (!endUser) {
         return res.status(404).json({ error: 'End user not found.' });
       }
 
-      endUser.name = name;
-      endUser.email = email;
-      await endUser.save();
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(password, 10);
 
+      await endUser.update({ name, email, password: hashedPassword });
       res.status(200).json({ message: 'End user updated successfully.' });
     } catch (error) {
       res.status(500).json({ error: 'An error occurred while updating the end user.' });
@@ -69,6 +108,20 @@ const EndUserController = {
       res.status(200).json({ message: 'End user deleted successfully.' });
     } catch (error) {
       res.status(500).json({ error: 'An error occurred while deleting the end user.' });
+    }
+  },
+  getEndUsersByName: async (req, res) => {
+    try {
+      const { name } = req.params;
+      const endUsers = await EndUser.findAll({
+        where: {
+          name: { [Op.like]: `%${name}%` } // Search by partial name match
+        },
+        limit: 10 // Limit the results per page
+      });
+      res.status(200).json(endUsers);
+    } catch (error) {
+      res.status(500).json({ error: 'An error occurred while fetching end users.' });
     }
   }
 };
